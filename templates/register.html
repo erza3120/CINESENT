@@ -1,8 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
+<script>
+/* ── MOBILE PERFORMANCE: runs before anything renders ── */
+(function(){
+  var isTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+  if (!isTouch) return;
+
+  // Mark body immediately so CSS can target it
+  document.documentElement.classList.add('is-mobile');
+
+  // Once DOM is ready, nuke the heavy elements entirely
+  document.addEventListener('DOMContentLoaded', function(){
+    // Remove all blob, grain, grid elements from DOM completely
+    var toRemove = document.querySelectorAll('.blob, .grain, .grid-overlay, .aurora .b1, .aurora .b2, .aurora .b3, .aurora .b4, .aurora .b5');
+    toRemove.forEach(function(el){ el.parentNode && el.parentNode.removeChild(el); });
+
+    // Stop all running CSS animations on the page
+    var style = document.createElement('style');
+    style.textContent = '.is-mobile *, .is-mobile *::before, .is-mobile *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.2s !important; }';
+    document.head.appendChild(style);
+
+    // Re-enable ONLY the animations we want on mobile (card entrance, bar fills)
+    setTimeout(function(){
+      var allow = document.createElement('style');
+      allow.textContent = [
+        '.is-mobile .mcard { animation: cardIn 0.4s ease forwards !important; }',
+        '.is-mobile .rcard { animation: cardIn 0.4s ease forwards !important; }',
+        '.is-mobile .t-card { animation: cardIn 0.4s ease forwards !important; }',
+        '.is-mobile .conf-fill { animation: barFill 0.7s ease forwards !important; }',
+        '.is-mobile .hero-content { animation: heroIn 0.5s ease both !important; }',
+        '.is-mobile .card-wrap, .is-mobile .hero { animation: heroIn 0.5s ease both !important; }'
+      ].join('\n');
+      document.head.appendChild(allow);
+    }, 50);
+  });
+})();
+</script>
+
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
   <title>CINESENT · Register</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -131,6 +171,80 @@
     .flash.warning{background:rgba(255,184,0,.1);border-color:var(--amber);color:var(--amber);}
 
     @media(max-width:480px){.row{grid-template-columns:1fr;}.stats-bar{gap:1rem;}}
+  
+
+  /* ── Kill remaining heavy animations on mobile ── */
+  @media (hover: none) and (pointer: coarse) {
+    /* Stop spinning conic-gradient borders - biggest offender */
+    .card::before, .glass-card::before,
+    .summary-wrap::before { animation: none !important; opacity: 0.4 !important; }
+
+    /* Static gradient buttons instead of animating */
+    .sbtn, .neon-btn, .btn-analyze, .search-go, .nav-search button
+      { animation: none !important; }
+
+    /* Stop text gradient animations */
+    .hi, .headline .hi, .rainbow-text
+      { animation: none !important; background-position: 0% 50% !important; }
+
+    /* Stop logo glitch on mobile (CPU intensive) */
+    .logo::before, .logo::after,
+    .glitch-logo::before, .glitch-logo::after
+      { animation: none !important; opacity: 0 !important; }
+
+    /* Promote animated elements to their own GPU layer */
+    .mcard, .t-card, .trending-card, .rcard
+      { will-change: transform; }
+
+    /* Reduce card hover effects on mobile */
+    .mcard:hover, .t-card:hover, .trending-card:hover
+      { transform: translateY(-4px) scale(1.01) !important; }
+
+    /* Stop summary bar spin */
+    .summary-wrap::after { animation: none !important; }
+  }
+
+  /* ── Mobile performance: disable GPU-heavy effects ── */
+
+  /* ── Aurora fallback when blobs are removed on mobile ── */
+  .is-mobile .aurora {
+    background:
+      radial-gradient(ellipse 90% 60% at 15% 15%, rgba(180,79,255,0.22) 0%, transparent 55%),
+      radial-gradient(ellipse 70% 50% at 85% 85%, rgba(255,45,155,0.18) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(0,245,255,0.10) 0%, transparent 55%),
+      #05030f !important;
+  }
+  /* Remove blur from card backgrounds - use solid instead */
+  .is-mobile .card, .is-mobile .glass-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(12, 8, 28, 0.97) !important;
+  }
+  .is-mobile .nav, .is-mobile .topbar, .is-mobile .stats-bar {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(5, 3, 15, 0.98) !important;
+  }
+
+  @media (hover: none) and (pointer: coarse) {
+    .blob       { display: none !important; }
+    .grain      { display: none !important; }
+    .grid-overlay { display: none !important; }
+    .aurora     { background: var(--bg) !important; }
+    /* Simplify backdrop blur */
+    .card, .nav, .login-card, .glass-card, .nav-search,
+    .topbar, .stats-bar { backdrop-filter: blur(8px) !important; -webkit-backdrop-filter: blur(8px) !important; }
+    /* Add a simple static gradient instead of blobs */
+    .aurora::after {
+      content: "";
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 20%, rgba(180,79,255,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(255,45,155,0.15) 0%, transparent 60%);
+      pointer-events: none;
+    }
+  }
+
   </style>
 </head>
 <body>
@@ -234,8 +348,8 @@
     /* Sparks */
     const colors=['#ff2d9b','#00f5ff','#b44fff','#39ff14','#ffb800'];
     function spawnSpark(){const s=document.createElement('div');s.className='spark';const c=colors[Math.floor(Math.random()*colors.length)],sz=Math.random()*3+2,l=Math.random()*100,d=Math.random()*8+6,dl=Math.random()*4;s.style.cssText=`left:${l}vw;bottom:0;width:${sz}px;height:${sz}px;background:${c};box-shadow:0 0 6px ${c};animation-duration:${d}s;animation-delay:${dl}s;`;document.body.appendChild(s);setTimeout(()=>s.remove(),(d+dl)*1000);}
-    for(let i=0;i<18;i++)spawnSpark();
-    setInterval(spawnSpark,600);
+    for(let i=0;i<(window.__mobileSlowSparks?3:18);i++)spawnSpark();
+    setInterval(spawnSpark, window.__mobileSlowSparks ? 3000 : 600);
 
     /* Password strength meter */
     const pwField=document.getElementById('password');
@@ -296,5 +410,73 @@
     /* Flash dismiss */
     setTimeout(()=>{document.querySelectorAll('.flash').forEach(el=>{el.style.transition='opacity .4s';el.style.opacity='0';setTimeout(()=>el.remove(),400);});},4000);
   </script>
+
+<style>
+  @media (hover: none) and (pointer: coarse) {
+    #cursor-dot, #cursor-ring { display: none !important; }
+    body { cursor: auto !important; }
+  }
+  .touch-ripple {
+    position: fixed; border-radius: 50%; pointer-events: none; z-index: 9999;
+    transform: translate(-50%,-50%) scale(0);
+    animation: touchBurst 0.6s cubic-bezier(0.22,1,0.36,1) forwards;
+  }
+  @keyframes touchBurst {
+    0%   { transform: translate(-50%,-50%) scale(0);   opacity: 1; }
+    60%  { transform: translate(-50%,-50%) scale(1);   opacity: 0.7; }
+    100% { transform: translate(-50%,-50%) scale(1.6); opacity: 0; }
+  }
+  .touch-ring {
+    position: fixed; border-radius: 50%; pointer-events: none; z-index: 9998;
+    border: 2px solid; transform: translate(-50%,-50%) scale(0);
+    animation: touchRing 0.7s cubic-bezier(0.22,1,0.36,1) forwards;
+  }
+  @keyframes touchRing {
+    0%   { transform: translate(-50%,-50%) scale(0);   opacity: 0.8; }
+    100% { transform: translate(-50%,-50%) scale(2.5); opacity: 0; }
+  }
+  .touch-spark {
+    position: fixed; width: 5px; height: 5px; border-radius: 50%;
+    pointer-events: none; z-index: 9997;
+    animation: sparkShoot var(--dur) ease-out forwards;
+  }
+  @keyframes sparkShoot {
+    0%   { transform: translate(-50%,-50%) translate(0,0) scale(1); opacity: 1; }
+    100% { transform: translate(-50%,-50%) translate(var(--tx),var(--ty)) scale(0); opacity: 0; }
+  }
+</style>
+<script>
+(function(){
+  const isTouch=window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+  if(!isTouch)return;
+  const C=['#ff2d9b','#00f5ff','#b44fff','#39ff14','#ffb800'];
+  const pick=()=>C[Math.floor(Math.random()*C.length)];
+  function burst(x,y){
+    const color=pick(),size=44+Math.random()*20;
+    const dot=document.createElement('div');
+    dot.className='touch-ripple';
+    dot.style.cssText=`left:${x}px;top:${y}px;width:${size}px;height:${size}px;background:${color};box-shadow:0 0 18px ${color},0 0 40px ${color}55;`;
+    document.body.appendChild(dot);
+    dot.addEventListener('animationend',()=>dot.remove());
+    const ring=document.createElement('div');
+    ring.className='touch-ring';
+    ring.style.cssText=`left:${x}px;top:${y}px;width:${size}px;height:${size}px;border-color:${color};`;
+    document.body.appendChild(ring);
+    ring.addEventListener('animationend',()=>ring.remove());
+    for(let i=0;i<8;i++){
+      const a=(i/8)*Math.PI*2,d=40+Math.random()*40,dur=(0.45+Math.random()*0.3).toFixed(2)+'s',sc=pick();
+      const s=document.createElement('div');
+      s.className='touch-spark';
+      s.style.cssText=`left:${x}px;top:${y}px;background:${sc};box-shadow:0 0 6px ${sc};--tx:${Math.cos(a)*d}px;--ty:${Math.sin(a)*d}px;--dur:${dur};`;
+      document.body.appendChild(s);
+      s.addEventListener('animationend',()=>s.remove());
+    }
+  }
+  document.addEventListener('touchstart',e=>{
+    Array.from(e.changedTouches).forEach(t=>burst(t.clientX,t.clientY));
+  },{passive:true});
+})();
+</script>
+
 </body>
 </html>

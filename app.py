@@ -30,7 +30,17 @@ from werkzeug.security import generate_password_hash, check_password_hash
 #  App Configuration
 # ─────────────────────────────────────────────────────────────────
 app = Flask(__name__)
-app.secret_key = "cinesent_secret_2024_change_in_production"
+app.secret_key = os.environ.get("SECRET_KEY", "cinesent_secret_2024_change_in_production")
+
+# Gzip compress all responses — cuts transfer size ~70%, big win on mobile
+# Install with: pip install flask-compress
+try:
+    from flask_compress import Compress
+    Compress(app)
+    print("✅  Gzip compression enabled.")
+except ImportError:
+    print("ℹ️   flask-compress not installed — running without gzip.")
+    print("    Run: pip install flask-compress")
 
 BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
 DATABASE    = os.path.join(BASE_DIR, "database.db")
