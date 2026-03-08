@@ -2,47 +2,9 @@
 <html lang="en">
 <head>
 
-<script>
-/* ── MOBILE PERFORMANCE: runs before anything renders ── */
-(function(){
-  var isTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-  if (!isTouch) return;
-
-  // Mark body immediately so CSS can target it
-  document.documentElement.classList.add('is-mobile');
-
-  // Once DOM is ready, nuke the heavy elements entirely
-  document.addEventListener('DOMContentLoaded', function(){
-    // Remove all blob, grain, grid elements from DOM completely
-    var toRemove = document.querySelectorAll('.blob, .grain, .grid-overlay, .aurora .b1, .aurora .b2, .aurora .b3, .aurora .b4, .aurora .b5');
-    toRemove.forEach(function(el){ el.parentNode && el.parentNode.removeChild(el); });
-
-    // Stop all running CSS animations on the page
-    var style = document.createElement('style');
-    style.textContent = '.is-mobile *, .is-mobile *::before, .is-mobile *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.2s !important; }';
-    document.head.appendChild(style);
-
-    // Re-enable ONLY the animations we want on mobile (card entrance, bar fills)
-    setTimeout(function(){
-      var allow = document.createElement('style');
-      allow.textContent = [
-        '.is-mobile .mcard { animation: cardIn 0.4s ease forwards !important; }',
-        '.is-mobile .rcard { animation: cardIn 0.4s ease forwards !important; }',
-        '.is-mobile .t-card { animation: cardIn 0.4s ease forwards !important; }',
-        '.is-mobile .conf-fill { animation: barFill 0.7s ease forwards !important; }',
-        '.is-mobile .hero-content { animation: heroIn 0.5s ease both !important; }',
-        '.is-mobile .card-wrap, .is-mobile .hero { animation: heroIn 0.5s ease both !important; }'
-      ].join('\n');
-      document.head.appendChild(allow);
-    }, 50);
-  });
-})();
-</script>
 
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="mobile-web-app-capable" content="yes"/>
-  <meta name="apple-mobile-web-app-capable" content="yes"/>
   <title>CINESENT · Register</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -173,7 +135,7 @@
     @media(max-width:480px){.row{grid-template-columns:1fr;}.stats-bar{gap:1rem;}}
   
 
-  /* ── Kill remaining heavy animations on mobile ── */
+  
   @media (hover: none) and (pointer: coarse) {
     /* Stop spinning conic-gradient borders - biggest offender */
     .card::before, .glass-card::before,
@@ -204,16 +166,8 @@
     .summary-wrap::after { animation: none !important; }
   }
 
-  /* ── Mobile performance: disable GPU-heavy effects ── */
-
-  /* ── Aurora fallback when blobs are removed on mobile ── */
-  .is-mobile .aurora {
-    background:
-      radial-gradient(ellipse 90% 60% at 15% 15%, rgba(180,79,255,0.22) 0%, transparent 55%),
-      radial-gradient(ellipse 70% 50% at 85% 85%, rgba(255,45,155,0.18) 0%, transparent 55%),
-      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(0,245,255,0.10) 0%, transparent 55%),
-      #05030f !important;
-  }
+  
+  
   /* Remove blur from card backgrounds - use solid instead */
   .is-mobile .card, .is-mobile .glass-card {
     backdrop-filter: none !important;
@@ -348,8 +302,8 @@
     /* Sparks */
     const colors=['#ff2d9b','#00f5ff','#b44fff','#39ff14','#ffb800'];
     function spawnSpark(){const s=document.createElement('div');s.className='spark';const c=colors[Math.floor(Math.random()*colors.length)],sz=Math.random()*3+2,l=Math.random()*100,d=Math.random()*8+6,dl=Math.random()*4;s.style.cssText=`left:${l}vw;bottom:0;width:${sz}px;height:${sz}px;background:${c};box-shadow:0 0 6px ${c};animation-duration:${d}s;animation-delay:${dl}s;`;document.body.appendChild(s);setTimeout(()=>s.remove(),(d+dl)*1000);}
-    for(let i=0;i<(window.__mobileSlowSparks?3:18);i++)spawnSpark();
-    setInterval(spawnSpark, window.__mobileSlowSparks ? 3000 : 600);
+    for(let i=0;i<18;i++)spawnSpark();
+    setInterval(spawnSpark,600);
 
     /* Password strength meter */
     const pwField=document.getElementById('password');
